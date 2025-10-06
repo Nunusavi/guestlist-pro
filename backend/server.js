@@ -245,15 +245,32 @@ app.use((err, req, res, next) => {
 });
 
 // Start server only if not imported (e.g., tests)
+
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => {
-        info(`🚀 GuestList Pro API running on port ${PORT}`);
-        info(`📍 Health check: http://localhost:${PORT}/api/health`);
+    const server = app.listen(PORT, () => {
+        // Try to get actual address info (works locally and on some cloud platforms)
+        const addr = server.address && typeof server.address === 'function' ? server.address() : server.address;
+        const host = (addr && addr.address && addr.address !== '::' && addr.address !== '0.0.0.0') ? addr.address : process.env.HOST || 'localhost';
+        const port = (addr && addr.port) ? addr.port : PORT;
+        // Protocol: Vercel/Cloud may use proxy, so check X-Forwarded-Proto or default to http
+        const protocol = process.env.PROTOCOL || (process.env.VERCEL ? 'https' : 'http');
+
+        info(`🚀 GuestList Pro API running at ${protocol}://${host}:${port}`);
+        info(`📍 Health check: ${protocol}://${host}:${port}/api/health`);
         info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
         info(`🔗 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
         info(`🛡️  Rate limit: ${process.env.RATE_LIMIT_MAX || 100} requests per ${process.env.RATE_LIMIT_WINDOW || 60000}ms`);
-        info(`✅ Guest management endpoints loaded (Batches 5 & 6)`);
-        info(`✅ Admin endpoints loaded (Batches 7 & 8)`);
+        if (process.env.VERCEL) {
+            info(`🦄 Running on Vercel deployment: ${process.env.VERCEL_URL || '(unknown URL)'}`);
+        }
+        if (process.env.NODE_ENV === 'production') {
+            if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'changeme') {
+                logError('⚠️  WARNING: Using default or missing JWT_SECRET in production!');
+            }
+            if (!process.env.FRONTEND_URL) {
+                logError('⚠️  WARNING: FRONTEND_URL not set in production!');
+            }
+        }
     });
 
     // Graceful shutdown
