@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import "./index.css";
-import { ToastProvider } from "./components/Toast";
+import { ToastProvider } from "./components/Toast.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
