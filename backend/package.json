@@ -1,0 +1,33 @@
+{
+  "name": "guestlist-pro-backend",
+  "version": "1.0.0",
+  "description": "Backend API for GuestList Pro - Real-time guest check-in system",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "deploy": "vercel --prod",
+    "db:setup": "node db/setup.js",
+    "db:update-passwords": "node db/update-passwords.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "fs": "^0.0.1-security",
+    "googleapis": "^161.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "path": "^0.12.7",
+    "pg": "^8.16.3",
+    "winston": "^3.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "vercel": "^33.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
