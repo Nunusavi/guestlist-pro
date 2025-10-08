@@ -73,8 +73,9 @@ export default async function handler(req, res) {
         // Validate each guest entry
         for (let i = 0; i < guests.length; i++) {
             const guest = guests[i];
+            const trimmedGuestId = guest?.guestId != null ? String(guest.guestId).trim() : '';
 
-            if (!guest.guestId) {
+            if (!trimmedGuestId) {
                 return res.status(400).json({
                     success: false,
                     error: 'Validation Error',
@@ -83,13 +84,16 @@ export default async function handler(req, res) {
                 });
             }
 
-            if (guest.plusOnes !== undefined && (isNaN(guest.plusOnes) || guest.plusOnes < 0)) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Validation Error',
-                    message: `Guest at index ${i} has invalid plusOnes value`,
-                    details: { index: i, value: guest.plusOnes }
-                });
+            if (guest.plusOnes !== undefined) {
+                const parsedPlusOnes = Number.parseInt(guest.plusOnes, 10);
+                if (Number.isNaN(parsedPlusOnes) || parsedPlusOnes < 0) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'Validation Error',
+                        message: `Guest at index ${i} has invalid plusOnes value`,
+                        details: { index: i, value: guest.plusOnes }
+                    });
+                }
             }
         }
 
@@ -105,9 +109,19 @@ export default async function handler(req, res) {
 
             // Process each guest
             for (const guestRequest of guests) {
-                const guestIdInt = parseInt(guestRequest.guestId);
-                const plusOnesInt = parseInt(guestRequest.plusOnes) || 0;
+                const guestId = guestRequest?.guestId != null ? String(guestRequest.guestId).trim() : '';
+                const parsedPlusOnes = Number.parseInt(guestRequest.plusOnes, 10);
+                const plusOnesInt = Number.isNaN(parsedPlusOnes) ? 0 : parsedPlusOnes;
                 const notes = guestRequest.notes || '';
+
+                if (!guestId) {
+                    failed.push({
+                        guestId,
+                        reason: 'Guest ID missing',
+                        error: 'INVALID_GUEST_ID'
+                    });
+                    continue;
+                }
 
                 try {
                     // Fetch guest details with row lock to prevent concurrent modifications
@@ -130,12 +144,12 @@ export default async function handler(req, res) {
             FOR UPDATE
           `;
 
-                    const guestResult = await client.query(guestQuery, [guestIdInt]);
+                    const guestResult = await client.query(guestQuery, [guestId]);
 
                     // Check if guest exists
                     if (guestResult.rows.length === 0) {
                         failed.push({
-                            guestId: guestIdInt,
+                            guestId,
                             reason: 'Guest not found',
                             error: 'NOT_FOUND'
                         });
@@ -147,7 +161,7 @@ export default async function handler(req, res) {
                     // Check if already checked in
                     if (guest.status === 'Checked In') {
                         failed.push({
-                            guestId: guestIdInt,
+                            guestId,
                             guestName: `${guest.first_name} ${guest.last_name}`,
                             reason: 'Already checked in',
                             error: 'ALREADY_CHECKED_IN',
@@ -162,7 +176,7 @@ export default async function handler(req, res) {
                     // Validate plus ones
                     if (plusOnesInt > guest.plus_ones_allowed) {
                         failed.push({
-                            guestId: guestIdInt,
+                            guestId,
                             guestName: `${guest.first_name} ${guest.last_name}`,
                             reason: `Requested ${plusOnesInt} plus ones but only ${guest.plus_ones_allowed} allowed`,
                             error: 'PLUS_ONES_EXCEEDED',
@@ -201,7 +215,7 @@ export default async function handler(req, res) {
                         plusOnesInt,
                         req.user.fullName || req.user.username,
                         notes,
-                        guestIdInt
+                        guestId
                     ]);
 
                     // Add to check-in log
@@ -220,7 +234,7 @@ export default async function handler(req, res) {
 
                     await client.query(logQuery, [
                         timestamp,
-                        guestIdInt,
+                        guestId,
                         `${guest.first_name} ${guest.last_name}`,
                         'Bulk Check In',
                         req.user.fullName || req.user.username,
@@ -231,7 +245,7 @@ export default async function handler(req, res) {
 
                     // Add to success list
                     checkedIn.push({
-                        guestId: guestIdInt,
+                        guestId,
                         guestName: `${guest.first_name} ${guest.last_name}`,
                         confirmationCode,
                         plusOnes: plusOnesInt,
@@ -241,7 +255,7 @@ export default async function handler(req, res) {
                 } catch (err) {
                     // Handle individual guest errors
                     failed.push({
-                        guestId: guestIdInt,
+                        guestId,
                         reason: err.message,
                         error: 'PROCESSING_ERROR'
                     });

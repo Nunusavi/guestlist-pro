@@ -35,9 +35,10 @@ export default async function handler(req, res) {
         });
 
         // Extract and validate guest ID
-        const guestId = parseInt(req.query.id);
+        const rawGuestId = req.query.id;
+        const guestId = rawGuestId != null ? String(rawGuestId).trim() : '';
 
-        if (!guestId || isNaN(guestId)) {
+        if (!guestId) {
             warn('Invalid guest ID provided', {
                 username: req.user.username,
                 providedId: req.query.id

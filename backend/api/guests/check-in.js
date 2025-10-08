@@ -16,7 +16,6 @@ import { info, warn, error as logError } from '../../utils/logger.js';
  * - Updated guest object
  * - Generated confirmation code
  */
-
 export default async function handler(req, res) {
     // Only allow POST requests
     if (req.method !== 'POST') {
@@ -38,9 +37,9 @@ export default async function handler(req, res) {
 
         // Extract and validate request body
         const { guestId, plusOnes = 0, notes = '' } = req.body;
+        const trimmedGuestId = guestId != null ? String(guestId).trim() : '';
 
-        // Validation
-        if (!guestId) {
+        if (!trimmedGuestId) {
             return res.status(400).json({
                 success: false,
                 error: 'Validation Error',
@@ -49,17 +48,8 @@ export default async function handler(req, res) {
             });
         }
 
-        const guestIdInt = parseInt(guestId);
-        const plusOnesInt = parseInt(plusOnes) || 0;
-
-        if (isNaN(guestIdInt)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validation Error',
-                message: 'Invalid guest ID',
-                details: { field: 'guestId' }
-            });
-        }
+        const parsedPlusOnes = Number.parseInt(plusOnes, 10);
+        const plusOnesInt = Number.isNaN(parsedPlusOnes) ? 0 : parsedPlusOnes;
 
         if (plusOnesInt < 0) {
             return res.status(400).json({
@@ -90,19 +80,19 @@ export default async function handler(req, res) {
       WHERE id = $1
     `;
 
-        const guestResult = await db.query(guestQuery, [guestIdInt]);
+        const guestResult = await db.query(guestQuery, [trimmedGuestId]);
 
         // Check if guest exists
         if (guestResult.rows.length === 0) {
             warn('Check-in failed: Guest not found', {
                 username: req.user.username,
-                guestId: guestIdInt
+                guestId: trimmedGuestId
             });
 
             return res.status(404).json({
                 success: false,
                 error: 'Not Found',
-                message: `Guest with ID ${guestIdInt} not found`
+                message: `Guest with ID ${trimmedGuestId} not found`
             });
         }
 
@@ -112,7 +102,7 @@ export default async function handler(req, res) {
         if (guest.status === 'Checked In') {
             warn('Check-in failed: Guest already checked in', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 guestName: `${guest.first_name} ${guest.last_name}`,
                 previousCheckIn: guest.check_in_time
             });
@@ -133,7 +123,7 @@ export default async function handler(req, res) {
         if (plusOnesInt > guest.plus_ones_allowed) {
             warn('Check-in failed: Too many plus ones', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 requested: plusOnesInt,
                 allowed: guest.plus_ones_allowed
             });
@@ -184,7 +174,7 @@ export default async function handler(req, res) {
                 plusOnesInt,
                 req.user.fullName || req.user.username,
                 notes,
-                guestIdInt
+                trimmedGuestId
             ]);
 
             const updatedGuest = updateResult.rows[0];
@@ -206,7 +196,7 @@ export default async function handler(req, res) {
 
             await client.query(logQuery, [
                 checkInTime,
-                guestIdInt,
+                trimmedGuestId,
                 `${guest.first_name} ${guest.last_name}`,
                 'Check In',
                 req.user.fullName || req.user.username,
@@ -222,7 +212,7 @@ export default async function handler(req, res) {
 
             info('Guest checked in successfully', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 guestName: `${guest.first_name} ${guest.last_name}`,
                 plusOnes: plusOnesInt,
                 confirmationCode,

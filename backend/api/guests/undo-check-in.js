@@ -39,23 +39,14 @@ export default async function handler(req, res) {
         // Extract and validate request body
         const { guestId, reason = '' } = req.body;
 
+        const trimmedGuestId = guestId != null ? String(guestId).trim() : '';
+
         // Validation
-        if (!guestId) {
+        if (!trimmedGuestId) {
             return res.status(400).json({
                 success: false,
                 error: 'Validation Error',
                 message: 'Guest ID is required',
-                details: { field: 'guestId' }
-            });
-        }
-
-        const guestIdInt = parseInt(guestId);
-
-        if (isNaN(guestIdInt)) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validation Error',
-                message: 'Invalid guest ID',
                 details: { field: 'guestId' }
             });
         }
@@ -77,22 +68,22 @@ export default async function handler(req, res) {
         notes,
         checked_in_by
       FROM guests
-      WHERE id = $1
+            WHERE id = $1
     `;
 
-        const guestResult = await db.query(guestQuery, [guestIdInt]);
+        const guestResult = await db.query(guestQuery, [trimmedGuestId]);
 
         // Check if guest exists
         if (guestResult.rows.length === 0) {
             warn('Undo check-in failed: Guest not found', {
                 username: req.user.username,
-                guestId: guestIdInt
+                guestId: trimmedGuestId
             });
 
             return res.status(404).json({
                 success: false,
                 error: 'Not Found',
-                message: `Guest with ID ${guestIdInt} not found`
+                message: `Guest with ID ${trimmedGuestId} not found`
             });
         }
 
@@ -102,7 +93,7 @@ export default async function handler(req, res) {
         if (guest.status !== 'Checked In') {
             warn('Undo check-in failed: Guest not checked in', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 guestName: `${guest.first_name} ${guest.last_name}`,
                 currentStatus: guest.status
             });
@@ -121,7 +112,7 @@ export default async function handler(req, res) {
         if (!guest.check_in_time) {
             warn('Undo check-in failed: No check-in time recorded', {
                 username: req.user.username,
-                guestId: guestIdInt
+                guestId: trimmedGuestId
             });
 
             return res.status(400).json({
@@ -140,7 +131,7 @@ export default async function handler(req, res) {
 
             warn('Undo check-in failed: Time window expired', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 guestName: `${guest.first_name} ${guest.last_name}`,
                 secondsElapsed,
                 allowedSeconds: UNDO_TIME_WINDOW / 1000
@@ -184,7 +175,7 @@ export default async function handler(req, res) {
 
             const updateResult = await client.query(updateQuery, [
                 timestamp,
-                guestIdInt
+                trimmedGuestId
             ]);
 
             const updatedGuest = updateResult.rows[0];
@@ -210,7 +201,7 @@ export default async function handler(req, res) {
 
             await client.query(logQuery, [
                 timestamp,
-                guestIdInt,
+                trimmedGuestId,
                 `${guest.first_name} ${guest.last_name}`,
                 'Undo Check In',
                 req.user.fullName || req.user.username,
@@ -226,7 +217,7 @@ export default async function handler(req, res) {
 
             info('Check-in undone successfully', {
                 username: req.user.username,
-                guestId: guestIdInt,
+                guestId: trimmedGuestId,
                 guestName: `${guest.first_name} ${guest.last_name}`,
                 previousConfirmationCode,
                 previousPlusOnes,
