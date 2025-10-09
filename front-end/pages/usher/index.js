@@ -766,21 +766,20 @@ function UsherDashboard() {
 
     return (
         <section className="space-y-8 text-slate-100">
-            <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900/90 p-6 shadow-2xl">
+            <header className="relative hidden overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900/90 p-3 shadow-2xl xl:block">
                 <div className="absolute -top-24 left-10 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl" />
                 <div className="absolute -bottom-32 right-0 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
-                <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="relative z-10 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide sm:text-center text-emerald-200/70">Usher tools</p>
                         <h1 className="mt-2 text-3xl font-semibold text-white">Guest Check-In</h1>
                     </div>
                 </div>
             </header>
-
-            <Card className="border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur">
-                <CardHeader className="pb-[-3]">
-                    <div className="flex items-center gap-2">
-                        <div className="rounded-full bg-white/10 p-2 text-emerald-300">
+            <Card className="border border-0  bg-slate-950/70 shadow-2xl backdrop-blur">
+                <CardHeader className="" style={{ marginBottom: -2 }}>
+                    <div className="flex items-center gap-4">
+                        <div className="rounded-full bg-white/10 p-3 text-emerald-300">
                             <Sparkles className="h-4 w-4" />
                         </div>
                         <div>
@@ -793,14 +792,14 @@ function UsherDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-                        <div className="flex-1 space-y-3">
+                        <div className="flex-1 space-y-2">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                                 <div className="relative flex-1">
                                     <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                                     <Input
                                         ref={searchInputRef}
                                         type="text"
-                                        placeholder="Search name, email, phone, or confirmation code"
+                                        placeholder="Name, Email or Phone"
                                         className="h-12 w-full rounded-full border-white/10 bg-white/10 pl-12 text-base text-slate-100 placeholder:text-slate-500"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -825,8 +824,8 @@ function UsherDashboard() {
                             </div>
                         </div>
 
-                        <div className="flex w-full flex-col gap-3 rounded-3xl border border-emerald-400/40 bg-emerald-500/10 p-3 shadow-inner lg:w-72 xl:w-80">
-                            <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-950/80">
+                        <div className="flex w-full flex-col gap-3 rounded-3xl border border-emerald-400/10 bg-emerald-500/10 p-2 shadow-inner lg:w-72 xl:w-80">
+                            <div className="relative h-80 w-full overflow-hidden rounded-2xl bg-slate-950/80">
                                 {isScannerOpen ? (
                                     isCameraReady ? (
                                         <ScannerComponent
@@ -909,10 +908,10 @@ function UsherDashboard() {
                             </div>
 
                             {isScannerOpen && availableCameras.length > 1 && (
-                                <div className="space-y-1">
+                                <div className="flex flex-col items-center space-y-1 text-center">
                                     <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-200/70">Camera source</p>
                                     <Select value={activeCameraId} onValueChange={handleCameraChange}>
-                                        <SelectTrigger className="h-9 rounded-full border-emerald-400/50 bg-emerald-500/10 text-xs text-emerald-100">
+                                        <SelectTrigger className="h-9 w-full max-w-[12rem] rounded-full border-emerald-400/50 bg-emerald-500/10 text-xs text-emerald-100">
                                             <SelectValue placeholder="Select camera" />
                                         </SelectTrigger>
                                         <SelectContent className="border border-emerald-500/40 bg-slate-900 text-emerald-100">
@@ -929,7 +928,7 @@ function UsherDashboard() {
                                         </SelectContent>
                                     </Select>
                                     {activeCameraLabel && (
-                                        <p className="text-[11px] text-emerald-200/60">Active: {activeCameraLabel}</p>
+                                        <div className="text-xs text-emerald-200 mt-1">{}</div>
                                     )}
                                 </div>
                             )}

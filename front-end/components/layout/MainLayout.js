@@ -237,8 +237,8 @@ export default function MainLayout({ children }) {
                 )}
             </header>
             <main className="pb-16 pt-6">
-                <div className="mx-auto w-full max-w-6xl px-4">
-                    <div className="rounded-3xl border border-white/5 bg-slate-900/70 p-5 shadow-[0_18px_48px_-22px_rgb(15_23_42/0.85)] backdrop-blur">
+                <div className="mx-auto w-full max-w-6xl px-1">
+                    <div className="rounded-3xl border-0 bg-slate-950 shadow-[0_18px_48px_-22px_rgb(15_23_42/0.85)] backdrop-blur">
                         {children}
                     </div>
                 </div>
