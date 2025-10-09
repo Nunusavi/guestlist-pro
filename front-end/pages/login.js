@@ -114,18 +114,17 @@ export default function LoginPage() {
                 </div>
 
                 <div className="relative border-t border-white/10 px-16 py-10 text-sm text-white/50">
-                    Trusted by venues hosting premieres, galas, and global summits.
+                    <a href="">Developed by <a href='https://natemes.com'>Nate</a></a>
                 </div>
             </section>
 
-            <section className="flex items-center justify-center px-6 py-12 sm:px-12 lg:px-16">
-                <Card className="relative w-full max-w-md overflow-hidden border border-white/10 bg-white/95 text-slate-900 shadow-2xl shadow-emerald-400/10 backdrop-blur">
-                    <div className="absolute -right-12 top-10 h-36 w-36 rounded-full bg-emerald-400/20 blur-3xl" />
-                    <div className="absolute -bottom-16 left-6 h-40 w-40 rounded-full bg-sky-400/15 blur-3xl" />
-                    <CardHeader className="relative z-10 space-y-3 text-center">
-                        <CardTitle className="text-3xl font-semibold">Welcome back</CardTitle>
+            <section className="flex items-center justify-center py-16 lg:px-16">
+                <div className="absolute top-0 left-0 h-50 w-50 rounded-full bg-emerald-400/20 blur-3xl" />
+                <Card className="relative w-full max-w-9/12 sm:max-w-screen overflow-hidden border-0 text-white ">
+                    <CardHeader className="relative z-10  text-center">
+                        <CardTitle className="text-3xl font-extrabold ">Welcome</CardTitle>
                         <CardDescription className="text-base text-slate-600">
-                            Sign in Team <span className="font-semibold text-emerald-400">LETS GOOO!!</span>
+                            <span className="font-bold text-emerald-400">Sign in!</span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="relative z-10">
@@ -136,7 +135,7 @@ export default function LoginPage() {
                                     name="username"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-slate-600">Username</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-slate-100">Username</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     autoComplete="username"
@@ -154,7 +153,7 @@ export default function LoginPage() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-slate-600">Password</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-slate-100">Password</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="password"
@@ -178,14 +177,15 @@ export default function LoginPage() {
                                 </Button>
                             </form>
                         </Form>
-                        <div className="mt-8 grid gap-4 rounded-2xl border border-slate-200/70 bg-white/50 p-4 text-xs text-slate-500">
+                        <div className="mt-8 grid gap-4 rounded-2xl bg-white/10 p-4 text-xs border-0 text-slate-500">
                             <div className="flex items-center justify-between">
-                                <span className="font-medium text-slate-700">Need support?</span>
-                                <span>Contact your site admin</span>
+                                <span className="font-medium text-slate-100">Need support?</span>
+                                <span className='text-slate-100'>Contact your site admin</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
+                <div className="absolute -bottom-0 right-0 h-40 w-40 rounded-full bg-sky-400/20 blur-2xl" />
             </section>
         </main>
     );

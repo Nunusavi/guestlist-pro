@@ -207,7 +207,7 @@ export default function MainLayout({ children }) {
                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-800">
                                             <UserCircle className="h-6 w-6 text-slate-200" />
                                         </div>
-                                        <div className="flex flex-1 flex-col text-sm"></div>
+                                        <div className="flex flex-1 flex-col text-sm">{displayName}</div>
                                         <ChevronDown
                                             className={cn(
                                                 "h-5 w-5 text-slate-400 transition-transform",

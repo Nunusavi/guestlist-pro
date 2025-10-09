@@ -154,7 +154,6 @@ function UsherDashboard() {
     const [selectedGuest, setSelectedGuest] = useState(null);
     const [plusOnes, setPlusOnes] = useState(0);
 
-    const [searchMode, setSearchMode] = useState('manual');
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [scanError, setScanError] = useState(null);
 
@@ -465,7 +464,6 @@ function UsherDashboard() {
             if (guests.length === 1) {
                 setTimeout(() => {
                     setIsScannerOpen(false);
-                    setSearchMode('manual');
                     setIsScanProcessing(false);
                     setIsCameraReady(false);
                     setIsCameraInitializing(false);
@@ -600,7 +598,6 @@ function UsherDashboard() {
         setActiveCameraId('auto');
         setIsScanProcessing(false);
         setScanCooldown(0);
-        setSearchMode('manual');
         setShowConfirmModal(false);
         setNetworkError(null);
         lastScanRef.current = { code: '', timestamp: 0 };
@@ -610,7 +607,6 @@ function UsherDashboard() {
     const toggleScanner = useCallback(() => {
         if (isScannerOpen) {
             setIsScannerOpen(false);
-            setSearchMode('manual');
             setScanError(null);
             setIsCameraReady(false);
             setIsCameraInitializing(false);
@@ -618,7 +614,7 @@ function UsherDashboard() {
             return;
         }
 
-        if (isScanProcessing || selectedGuest || isCameraInitializing) {
+        if (isScanProcessing || isCameraInitializing) {
             return;
         }
 
@@ -626,7 +622,6 @@ function UsherDashboard() {
             .then((granted) => {
                 if (!granted) return;
                 setIsScannerOpen(true);
-                setSearchMode('scan');
                 setSearchTerm('');
                 setResults([]);
                 setScanError(null);
@@ -634,7 +629,7 @@ function UsherDashboard() {
             .catch((error) => {
                 console.error('Failed to initialise camera before opening scanner:', error);
             });
-    }, [ensureCameraAccess, isCameraInitializing, isScanProcessing, isScannerOpen, selectedGuest]);
+    }, [ensureCameraAccess, isCameraInitializing, isScanProcessing, isScannerOpen]);
 
     const allowedPlusOnes = selectedGuest?.plusOnesAllowed ?? 0;
     const alreadyChecked = selectedGuest?.plusOnesCheckedIn ?? 0;
@@ -714,7 +709,7 @@ function UsherDashboard() {
             // Cmd/Ctrl + S - Toggle scanner
             if ((e.metaKey || e.ctrlKey) && e.key === 's') {
                 e.preventDefault();
-                if (!selectedGuest && !isScanProcessing) {
+                if (!isScanProcessing) {
                     toggleScanner();
                 }
             }
@@ -774,493 +769,422 @@ function UsherDashboard() {
             <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-900/90 p-6 shadow-2xl">
                 <div className="absolute -top-24 left-10 h-48 w-48 rounded-full bg-emerald-500/15 blur-3xl" />
                 <div className="absolute -bottom-32 right-0 h-56 w-56 rounded-full bg-sky-500/10 blur-3xl" />
-                <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide sm:text-center text-emerald-200/70">Usher tools</p>
                         <h1 className="mt-2 text-3xl font-semibold text-white">Guest Check-In</h1>
-                    </div>
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                        <Button
-                            onClick={toggleScanner}
-                            variant="outline"
-                            disabled={isScanProcessing || !!selectedGuest || isCameraInitializing}
-                            className={`w-full rounded-full border-white/20 bg-white/10 text-slate-100 backdrop-blur transition hover:bg-white/20 sm:w-auto ${searchMode === 'scan'
-                                ? 'border-emerald-400/60 text-emerald-200 hover:bg-emerald-500/10'
-                                : ''
-                                } ${(isScanProcessing || selectedGuest || isCameraInitializing)
-                                    ? 'cursor-not-allowed opacity-50'
-                                    : ''
-                                }`}
-                        >
-                            {isCameraInitializing ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Preparing camera...
-                                </>
-                            ) : isScanProcessing ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processing scan...
-                                </>
-                            ) : (
-                                <>
-                                    <Camera className="mr-2 h-4 w-4" />
-                                    {searchMode === 'scan' ? 'Close Scanner' : 'Open Scanner'}
-                                </>
-                            )}
-                            {scanCooldown > 0 && !isScanProcessing && (
-                                <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/30 text-xs font-bold text-amber-200">
-                                    {scanCooldown}
-                                </span>
-                            )}
-                        </Button>
-
-                        {selectedGuest && (
-                            <p className="text-xs text-slate-400 sm:hidden">
-                                Complete check-in or start new to use scanner
-                            </p>
-                        )}
                     </div>
                 </div>
             </header>
 
-            <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-                <Card className="border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur">
-                    <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-full bg-white/10 p-2 text-emerald-300">
-                                    <Sparkles className="h-4 w-4" />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-lg font-semibold text-white">
-                                        {searchMode === 'scan' ? 'QR Scanner' : 'Manual Search'}
-                                    </CardTitle>
-                                    <p className="text-sm text-slate-400">
-                                        {searchMode === 'scan'
-                                            ? 'Point camera at QR code to scan'
-                                            : 'Search by name, email, phone, or code'}
-                                    </p>
-                                </div>
-                            </div>
-                            <Badge
-                                variant="outline"
-                                className={searchMode === 'scan'
-                                    ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200'
-                                    : 'border-sky-400/50 bg-sky-500/10 text-sky-200'}
-                            >
-                                {searchMode === 'scan' ? 'Scan Mode' : 'Search Mode'}
-                            </Badge>
+            <Card className="border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur">
+                <CardHeader className="pb-[-3]">
+                    <div className="flex items-center gap-2">
+                        <div className="rounded-full bg-white/10 p-2 text-emerald-300">
+                            <Sparkles className="h-4 w-4" />
                         </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="space-y-4">
-                            {searchMode === 'manual' && (
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+                        <div>
+                            <h1 className="text-lg font-semibold text-white">Search & scan</h1>
+                            <p className="text-sm text-slate-400">
+                                Use the scanner to pull up a guest instantly.
+                            </p>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                        <div className="flex-1 space-y-3">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                                <div className="relative flex-1">
+                                    <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                                     <Input
                                         ref={searchInputRef}
                                         type="text"
-                                        placeholder="Search by name, email, confirmation code, or phone"
+                                        placeholder="Search name, email, phone, or confirmation code"
                                         className="h-12 w-full rounded-full border-white/10 bg-white/10 pl-12 text-base text-slate-100 placeholder:text-slate-500"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        disabled={!!selectedGuest}
+                                        disabled={isScanProcessing || isCameraInitializing}
                                     />
                                     {isSearching && (
-                                        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-emerald-300" />
+                                        <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-emerald-300" />
                                     )}
                                 </div>
-                            )}
+                                <Button
+                                    onClick={toggleScanner}
+                                    variant="outline"
+                                    size="lg"
+                                    disabled={isScanProcessing || isCameraInitializing}
+                                    aria-pressed={isScannerOpen}
+                                    aria-label={isScannerOpen ? 'Close QR scanner' : 'Open QR scanner'}
+                                    className={`flex items-center justify-center gap-2 rounded-2xl border-white/20 bg-white/10 px-5 text-white transition hover:bg-white/20 ${isScannerOpen ? 'border-emerald-400/60 text-emerald-200' : ''}`}
+                                >
+                                    <Camera className="h-5 w-5" />
+                                    <span className="hidden sm:inline">{isScannerOpen ? 'Hide scanner' : 'Scan QR'}</span>
+                                </Button>
+                            </div>
+                        </div>
 
-                            {searchMode === 'scan' && (
-                                <div className="overflow-hidden rounded-3xl border border-emerald-400/40 bg-emerald-500/10">
-                                    <div className="relative h-64 w-full">
-                                        {isCameraReady ? (
-                                            <ScannerComponent
-                                                key={scannerKey}
-                                                onScan={handleScan}
-                                                onError={handleScannerError}
-                                                constraints={videoConstraints}
-                                                paused={!isScannerOpen || isScanProcessing}
-                                                scanDelay={300}
-                                                allowMultiple
-                                                styles={{
-                                                    container: {
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        position: 'relative',
-                                                        borderRadius: 'inherit',
-                                                        overflow: 'hidden',
-                                                    },
-                                                    video: {
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'cover',
-                                                    },
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-slate-950/80 px-6 text-center">
-                                                {isCameraInitializing ? (
-                                                    <>
-                                                        <Loader2 className="h-12 w-12 animate-spin text-emerald-400" />
-                                                        <p className="text-sm font-medium text-emerald-200">Preparing camera...</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Camera className="h-10 w-10 text-emerald-300" />
-                                                        <p className="text-sm font-medium text-emerald-200">{permissionHint}</p>
-                                                        <Button
-                                                            onClick={() => ensureCameraAccess(activeCameraId)}
-                                                            disabled={isCameraInitializing}
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="mt-2 rounded-full border-emerald-400/60 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
-                                                        >
-                                                            <RefreshCw className="mr-2 h-3 w-3" />
-                                                            Retry Camera
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
+                        <div className="flex w-full flex-col gap-3 rounded-3xl border border-emerald-400/40 bg-emerald-500/10 p-3 shadow-inner lg:w-72 xl:w-80">
+                            <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-950/80">
+                                {isScannerOpen ? (
+                                    isCameraReady ? (
+                                        <ScannerComponent
+                                            key={scannerKey}
+                                            onScan={handleScan}
+                                            onError={handleScannerError}
+                                            constraints={videoConstraints}
+                                            paused={!isScannerOpen || isScanProcessing}
+                                            scanDelay={300}
+                                            allowMultiple
+                                            styles={{
+                                                container: {
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    position: 'relative',
+                                                    borderRadius: 'inherit',
+                                                    overflow: 'hidden',
+                                                },
+                                                video: {
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                },
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-slate-950/80 px-4 text-center">
+                                            {isCameraInitializing ? (
+                                                <>
+                                                    <Loader2 className="h-10 w-10 animate-spin text-emerald-400" />
+                                                    <p className="text-sm font-medium text-emerald-200">Preparing camera…</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Camera className="h-8 w-8 text-emerald-300" />
+                                                    <p className="text-sm font-medium text-emerald-200">{permissionHint}</p>
+                                                    <Button
+                                                        onClick={() => ensureCameraAccess(activeCameraId)}
+                                                        disabled={isCameraInitializing}
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="rounded-full border-emerald-400/60 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/20"
+                                                    >
+                                                        <RefreshCw className="mr-2 h-3 w-3" />
+                                                        Retry camera
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-slate-950/80 text-center text-emerald-100">
+                                        <Camera className="h-8 w-8 text-emerald-300" />
+                                        <p className="text-sm font-semibold">Scanner closed</p>
+                                        <p className="text-xs text-emerald-200/80">Tap Scan QR to open the camera.</p>
+                                    </div>
+                                )}
+
+                                {isScannerOpen && (
+                                    <>
                                         <div className="pointer-events-none absolute inset-0 border border-emerald-300/50 mix-blend-screen" />
-
                                         {isScanProcessing && (
                                             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
                                                 <div className="text-center">
-                                                    <Loader2 className="mx-auto h-12 w-12 animate-spin text-emerald-400" />
-                                                    <p className="mt-3 text-sm font-medium text-emerald-200">Processing scan...</p>
+                                                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-emerald-400" />
+                                                    <p className="mt-2 text-xs font-medium text-emerald-200">Processing…</p>
                                                 </div>
                                             </div>
                                         )}
-
                                         {scanCooldown > 0 && !isScanProcessing && (
-                                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-4 py-2 backdrop-blur-sm">
-                                                <div className="flex items-center gap-2 text-sm font-medium text-amber-200">
-                                                    <div className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-                                                    <span>Wait {scanCooldown}s before next scan</span>
-                                                </div>
+                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-amber-400/60 bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-200">
+                                                Wait {scanCooldown}s
                                             </div>
                                         )}
-
                                         {isScanProcessing && (
                                             <div className="pointer-events-none absolute inset-0 animate-pulse bg-emerald-500/20" />
                                         )}
-                                    </div>
-                                    <div className="space-y-3 px-4 pb-4 pt-3">
-                                        <p className="text-xs text-emerald-200/80">
-                                            Align the QR code within the frame. We&apos;ll search automatically on detection.
-                                        </p>
-                                        {scanCooldown > 0 && (
-                                            <p className="text-xs text-amber-300/90">
-                                                ⏱️ Cooldown active to prevent duplicate scans
-                                            </p>
-                                        )}
-                                        {availableCameras.length > 1 && (
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-200/70">Camera Source</p>
-                                                <Select value={activeCameraId} onValueChange={handleCameraChange}>
-                                                    <SelectTrigger className="h-9 rounded-full border-emerald-400/50 bg-emerald-500/10 text-xs text-emerald-100">
-                                                        <SelectValue placeholder="Select camera" />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="border border-emerald-500/40 bg-slate-900 text-emerald-100">
-                                                        <SelectItem value="auto">
-                                                            {preferredCameraLabel ? `Auto (${preferredCameraLabel})` : 'Auto (best available)'}
-                                                        </SelectItem>
-                                                        {availableCameras
-                                                            .filter((device) => device.deviceId)
-                                                            .map((device, index) => (
-                                                                <SelectItem key={device.deviceId} value={device.deviceId}>
-                                                                    {device.label || `Camera ${index + 1}`}
-                                                                </SelectItem>
-                                                            ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {activeCameraLabel && (
-                                                    <p className="text-[11px] text-emerald-200/60">Active: {activeCameraLabel}</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+                                    </>
+                                )}
+                            </div>
 
-                            {/* BATCH 3: Enhanced error display with retry */}
-                            {scanError && (
-                                <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3">
-                                    <div className="flex items-start gap-3">
-                                        <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-400" />
-                                        <p className="flex-1 text-xs text-rose-200">{scanError}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {networkError && (
-                                <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-400" />
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-amber-200">Connection Issue</p>
-                                            <p className="mt-1 text-xs text-amber-300/90">{networkError.message}</p>
-                                            <Button
-                                                onClick={retrySearch}
-                                                disabled={isRetrying}
-                                                size="sm"
-                                                variant="outline"
-                                                className="mt-3 rounded-full border-amber-400/60 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20"
-                                            >
-                                                {isRetrying ? (
-                                                    <>
-                                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                                                        Retrying...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <RefreshCw className="mr-2 h-3 w-3" />
-                                                        Retry Search
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
+                            {isScannerOpen && availableCameras.length > 1 && (
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-200/70">Camera source</p>
+                                    <Select value={activeCameraId} onValueChange={handleCameraChange}>
+                                        <SelectTrigger className="h-9 rounded-full border-emerald-400/50 bg-emerald-500/10 text-xs text-emerald-100">
+                                            <SelectValue placeholder="Select camera" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border border-emerald-500/40 bg-slate-900 text-emerald-100">
+                                            <SelectItem value="auto">
+                                                {preferredCameraLabel ? `Auto (${preferredCameraLabel})` : 'Auto (best available)'}
+                                            </SelectItem>
+                                            {availableCameras
+                                                .filter((device) => device.deviceId)
+                                                .map((device, index) => (
+                                                    <SelectItem key={device.deviceId} value={device.deviceId}>
+                                                        {device.label || `Camera ${index + 1}`}
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {activeCameraLabel && (
+                                        <p className="text-[11px] text-emerald-200/60">Active: {activeCameraLabel}</p>
+                                    )}
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-400">
-                                <span>{results.length ? 'Matches' : 'Waiting for results'}</span>
-                                <span>{results.length} found</span>
+                    {scanError && (
+                        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 flex-shrink-0 text-rose-400" />
+                                <p className="flex-1 text-xs text-rose-200">{scanError}</p>
                             </div>
-                            <div ref={resultsListRef} className="max-h-[460px] space-y-2 overflow-y-auto scr pr-1 [&::-webkit-scrollbar]:w-2
-  [&::-webkit-scrollbar-track]:rounded-full
-  [&::-webkit-scrollbar-track]:bg-slate-900
-  [&::-webkit-scrollbar-thumb]:rounded-full
-  [&::-webkit-scrollbar-thumb]:bg-gray-300
-  dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-                                {isSearching ? (
-                                    Array(3).fill(0).map((_, index) => (
+                        </div>
+                    )}
+
+                    {networkError && (
+                        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-400" />
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-amber-200">Connection issue</p>
+                                    <p className="mt-1 text-xs text-amber-300/90">{networkError.message}</p>
+                                    <Button
+                                        onClick={retrySearch}
+                                        disabled={isRetrying}
+                                        size="sm"
+                                        variant="outline"
+                                        className="mt-3 rounded-full border-amber-400/60 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20"
+                                    >
+                                        {isRetrying ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                                Retrying…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <RefreshCw className="mr-2 h-3 w-3" />
+                                                Retry search
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-400">
+                            <span>{results.length ? 'Guest results' : 'Waiting for input'}</span>
+                            <span>{results.length} found</span>
+                        </div>
+                        <div
+                            ref={resultsListRef}
+                            className="max-h-[460px] space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-slate-900 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-500/70"
+                        >
+                            {isSearching ? (
+                                Array(3)
+                                    .fill(0)
+                                    .map((_, index) => (
                                         <div key={index} className="h-20 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
                                     ))
-                                ) : results.length > 0 ? (
-                                    results.map((guest, index) => {
-                                        const guestKey = getGuestKey(guest) || guest.confirmationCode || guest.email || `guest-${index}`;
-                                        const checkedIn = guest.status === 'checked_in';
-                                        const isActive = getGuestKey(selectedGuest) === getGuestKey(guest);
+                            ) : results.length > 0 ? (
+                                results.map((guest, index) => {
+                                    const guestKey = getGuestKey(guest) || guest.confirmationCode || guest.email || `guest-${index}`;
+                                    const checkedIn = guest.status === 'checked_in';
+                                    const isActive = getGuestKey(selectedGuest) === getGuestKey(guest);
 
-                                        return (
-                                            <button
-                                                type="button"
-                                                key={guestKey}
-                                                data-guest-id={guestKey}
-                                                onClick={() => handleSelectGuest(guest)}
-                                                className={`w-full rounded-2xl border px-4 pb-3 pt-4 text-left transition ${isActive
-                                                    ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.15)]'
-                                                    : 'border-white/10 bg-slate-900/60 hover:border-emerald-400/40 hover:bg-slate-900/40'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-white">
-                                                            {guest.firstName} {guest.lastName}
-                                                        </p>
-                                                        <p className="text-xs text-slate-400">{guest.email || 'No email on file'}</p>
-                                                        {guest.phone && (
-                                                            <p className="text-xs text-slate-500">{guest.phone}</p>
-                                                        )}
-                                                    </div>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={checkedIn
-                                                            ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200'
-                                                            : 'border-white/20 bg-white/10 text-slate-200'}
-                                                    >
-                                                        {checkedIn ? 'Checked in' : 'Awaiting'}
-                                                    </Badge>
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={guestKey}
+                                            data-guest-id={guestKey}
+                                            onClick={() => handleSelectGuest(guest)}
+                                            className={`w-full rounded-2xl border px-4 pb-3 pt-4 text-left transition ${isActive
+                                                ? 'border-emerald-400/60 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.15)]'
+                                                : 'border-white/10 bg-slate-900/60 hover:border-emerald-400/40 hover:bg-slate-900/40'
+                                                }`}
+                                        >
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-white">
+                                                        {guest.firstName} {guest.lastName}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400">{guest.email || 'No email on file'}</p>
+                                                    {guest.phone && <p className="text-xs text-slate-500">{guest.phone}</p>}
                                                 </div>
-                                                <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-                                                    <span>ID {guest.displayId || guest.confirmationCode || guest.id || guestKey || '—'}</span>
-                                                    <span>Plus-ones {guest.plusOnesCheckedIn}/{guest.plusOnesAllowed}</span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })
-                                ) : (
-                                    <Card className="border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm text-slate-400">
-                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
-                                            <Search className="h-8 w-8 text-slate-500" />
-                                        </div>
-                                        <p className="font-medium text-slate-300">
-                                            {searchMode === 'scan'
-                                                ? 'Ready to Scan'
-                                                : 'Start Your Search'}
-                                        </p>
-                                        <p className="mt-1 text-xs">
-                                            {searchMode === 'scan'
-                                                ? 'Point camera at a QR code to begin scanning'
-                                                : 'Type a name, email, phone number, or confirmation code'}
-                                        </p>
-                                    </Card>
-                                )}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="flex h-full flex-col border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="text-lg font-semibold text-white">Check-in workflow</CardTitle>
-                        <p className="mt-1 text-sm text-slate-400">Follow the steps to finalize arrivals and keep totals accurate.</p>
-                    </CardHeader>
-                    <CardContent className="flex flex-1 flex-col gap-5">
-                        <div className="space-y-5">
-                            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    <Badge variant="outline" className="border-white/20 bg-white/10 text-slate-200">Step 1</Badge>
-                                    Choose a guest
-                                </div>
-                                {selectedGuest ? (
-                                    <div className="mt-4 space-y-3 text-sm text-slate-300/90">
-                                        <div className="flex items-baseline justify-between gap-3">
-                                            <p className="text-lg font-semibold text-white">
-                                                {selectedGuest.firstName} {selectedGuest.lastName}
-                                            </p>
-                                            <Badge variant="outline" className="border-sky-400/50 bg-sky-500/10 text-sky-200">
-                                                {selectedGuest.ticketType}
-                                            </Badge>
-                                        </div>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                                                <p className="text-xs uppercase tracking-wide text-slate-400">Email</p>
-                                                <p className="mt-1 text-white/90">{selectedGuest.email || '—'}</p>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={checkedIn ? 'border-emerald-400/60 bg-emerald-500/10 text-emerald-200' : 'border-white/20 bg-white/10 text-slate-200'}
+                                                >
+                                                    {checkedIn ? 'Checked in' : 'Awaiting'}
+                                                </Badge>
                                             </div>
-                                            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
-                                                <p className="text-xs uppercase tracking-wide text-slate-400">Phone</p>
-                                                <p className="mt-1 text-white/90">{selectedGuest.phone || '—'}</p>
+                                            <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                                                <span>ID {guest.displayId || guest.confirmationCode || guest.id || guestKey || '—'}</span>
+                                                <span>Plus-ones {guest.plusOnesCheckedIn}/{guest.plusOnesAllowed}</span>
                                             </div>
-                                        </div>
-                                        <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm">
-                                            <p className="text-xs uppercase tracking-wide text-slate-400">Guest ID</p>
-                                            <p className="mt-1 font-mono text-white/90">{selectedGuest.displayId || selectedGuest.confirmationCode || getGuestKey(selectedGuest) || '—'}</p>
-                                        </div>
+                                        </button>
+                                    );
+                                })
+                            ) : (
+                                <Card className="border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm text-slate-400">
+                                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5">
+                                        <Search className="h-8 w-8 text-slate-500" />
                                     </div>
-                                ) : (
-                                    <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
-                                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
-                                            <Users className="h-6 w-6 text-slate-500" />
-                                        </div>
-                                        <p>Scan a badge or select a guest from the results to begin.</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={`rounded-2xl border border-white/10 p-5 ${selectedGuest ? 'bg-white/5' : 'bg-slate-900/40'}`}>
-                                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                    <Badge variant="outline" className="border-white/20 bg-white/10 text-slate-200">Step 2</Badge>
-                                    Confirm plus-ones
-                                </div>
-                                {selectedGuest ? (
-                                    <div className="mt-4 space-y-3">
-                                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                                            <Badge variant="outline" className="border-emerald-400/50 bg-emerald-500/10 text-emerald-200">
-                                                Plus-ones {alreadyChecked}/{allowedPlusOnes}
-                                            </Badge>
-                                            <span>
-                                                {remainingPlusOnes > 0 ? `${remainingPlusOnes} remaining` : 'Limit reached'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="outline"
-                                                onClick={() => adjustPlusOnes(-1)}
-                                                disabled={plusOnes <= 0}
-                                                className="h-11 w-11 rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20"
-                                            >
-                                                <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <Input
-                                                id="plusOnes"
-                                                type="number"
-                                                min="0"
-                                                max={remainingPlusOnes}
-                                                value={plusOnes}
-                                                onChange={(e) => handlePlusOnesChange(e.target.value)}
-                                                className="h-11 w-28 rounded-2xl border-white/10 bg-slate-900/60 text-center text-lg text-white"
-                                            />
-                                            <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="outline"
-                                                onClick={() => adjustPlusOnes(1)}
-                                                disabled={plusOnes >= remainingPlusOnes}
-                                                className="h-11 w-11 rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20"
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        <p className="text-xs text-slate-400">
-                                            {remainingPlusOnes > 0
-                                                ? `You can add up to ${remainingPlusOnes} more guest${remainingPlusOnes === 1 ? '' : 's'}. Use number keys 0-9 or arrow keys.`
-                                                : 'All plus-one spots have been used.'}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
-                                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
-                                            <UserCheck className="h-6 w-6 text-slate-500" />
-                                        </div>
-                                        <p>Select a guest to unlock plus-one controls.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="mt-auto space-y-4">
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                                <Button
-                                    onClick={handlePrepareCheckIn}
-                                    size="lg"
-                                    disabled={!selectedGuest}
-                                    className="flex-1 rounded-full py-2.5 bg-emerald-500 text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
-                                >
-                                    <UserCheck className="mr-2 h-5 w-5" />
-                                    Confirm check-in
-                                    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2 py-1 text-xs text-emerald-100">
-                                        <Users className="h-3.5 w-3.5" />
-                                        {selectedGuest ? 1 + Number(plusOnes) : 0}
-                                    </span>
-                                </Button>
-                                <Button
-                                    onClick={resetState}
-                                    size="lg"
-                                    variant="outline"
-                                    className="rounded-full border-white/20 bg-white/5 text-slate-200 hover:bg-white/15"
-                                >
-                                    Start new check-in
-                                </Button>
-                            </div>
-                            {selectedGuest && (
-                                <p className="text-xs text-slate-500">
-                                    Tip: Press <kbd className="rounded bg-white/10 px-1.5 py-0.5">Enter</kbd> to check in,
-                                    <kbd className="ml-1 rounded bg-white/10 px-1.5 py-0.5">0-9</kbd> for plus-ones, or
-                                    <kbd className="ml-1 rounded bg-white/10 px-1.5 py-0.5">Esc</kbd> to cancel
-                                </p>
-                            )}
-                            {!selectedGuest && (
-                                <p className="text-xs text-slate-500">
-                                    Tip: Keep the scanner open to capture the next guest instantly.
-                                </p>
+                                    <p className="font-medium text-slate-300">Start by scanning or searching</p>
+                                    <p className="mt-1 text-xs">
+                                        Enter a guest detail above or open the scanner to begin check-in.
+                                    </p>
+                                </Card>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
 
-            {/* BATCH 2: Check-in Confirmation Modal */}
+                    <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <Badge variant="outline" className="border-white/20 bg-white/10 text-slate-200">
+                                Guest
+                            </Badge>
+                            Primary guest details
+                        </div>
+                        {selectedGuest ? (
+                            <div className="mt-4 space-y-3 text-sm text-slate-300/90">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <p className="text-lg font-semibold text-white">
+                                        {selectedGuest.firstName} {selectedGuest.lastName}
+                                    </p>
+                                    <Badge variant="outline" className="border-sky-400/50 bg-sky-500/10 text-sky-200">
+                                        {selectedGuest.ticketType}
+                                    </Badge>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+                                        <p className="text-xs uppercase tracking-wide text-slate-400">Email</p>
+                                        <p className="mt-1 text-white/90">{selectedGuest.email || '—'}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4">
+                                        <p className="text-xs uppercase tracking-wide text-slate-400">Phone</p>
+                                        <p className="mt-1 text-white/90">{selectedGuest.phone || '—'}</p>
+                                    </div>
+                                </div>
+                                <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm">
+                                    <p className="text-xs uppercase tracking-wide text-slate-400">Guest ID</p>
+                                    <p className="mt-1 font-mono text-white/90">{selectedGuest.displayId || selectedGuest.confirmationCode || getGuestKey(selectedGuest) || '—'}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
+                                    <Users className="h-6 w-6 text-slate-500" />
+                                </div>
+                                <p>Scan a badge or select a guest from the results to begin.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <Badge variant="outline" className="border-white/20 bg-white/10 text-slate-200">
+                                Plus-ones
+                            </Badge>
+                            Confirm additional guests
+                        </div>
+                        {selectedGuest ? (
+                            <div className="mt-4 space-y-3">
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                                    <Badge variant="outline" className="border-emerald-400/50 bg-emerald-500/10 text-emerald-200">
+                                        Plus-ones {alreadyChecked}/{allowedPlusOnes}
+                                    </Badge>
+                                    <span>{remainingPlusOnes > 0 ? `${remainingPlusOnes} remaining` : 'Limit reached'}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="outline"
+                                        onClick={() => adjustPlusOnes(-1)}
+                                        disabled={plusOnes <= 0}
+                                        className="h-11 w-11 rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20"
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <Input
+                                        id="plusOnes"
+                                        type="number"
+                                        min="0"
+                                        max={remainingPlusOnes}
+                                        value={plusOnes}
+                                        onChange={(e) => handlePlusOnesChange(e.target.value)}
+                                        className="h-11 w-28 rounded-2xl border-white/10 bg-slate-900/60 text-center text-lg text-white"
+                                    />
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="outline"
+                                        onClick={() => adjustPlusOnes(1)}
+                                        disabled={plusOnes >= remainingPlusOnes}
+                                        className="h-11 w-11 rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-slate-400">
+                                    {remainingPlusOnes > 0
+                                        ? `You can add up to ${remainingPlusOnes} more guest${remainingPlusOnes === 1 ? '' : 's'}. Use number keys 0-9 or arrow keys.`
+                                        : 'All plus-one spots have been used.'}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-slate-900/50 p-6 text-center text-sm text-slate-400">
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/5">
+                                    <UserCheck className="h-6 w-6 text-slate-500" />
+                                </div>
+                                <p>Select a guest to unlock plus-one controls.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                            <Button
+                                onClick={handlePrepareCheckIn}
+                                size="lg"
+                                disabled={!selectedGuest}
+                                className="flex-1 rounded-full bg-emerald-500 py-2.5 text-emerald-950 hover:bg-emerald-400 disabled:opacity-40"
+                            >
+                                <UserCheck className="mr-2 h-5 w-5" />
+                                Confirm check-in
+                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2 py-1 text-xs text-emerald-100">
+                                    <Users className="h-3.5 w-3.5" />
+                                    {selectedGuest ? 1 + Number(plusOnes) : 0}
+                                </span>
+                            </Button>
+                            <Button
+                                onClick={resetState}
+                                size="lg"
+                                variant="outline"
+                                className="rounded-full border-white/20 bg-white/5 text-slate-200 hover:bg-white/15"
+                            >
+                                Start new check-in
+                            </Button>
+                        </div>
+                        {selectedGuest ? (
+                            <p className="text-xs text-slate-500">
+                                Tip: Press <kbd className="rounded bg-white/10 px-1.5 py-0.5">Enter</kbd> to check in,
+                                <kbd className="ml-1 rounded bg-white/10 px-1.5 py-0.5">0-9</kbd> for plus-ones, or
+                                <kbd className="ml-1 rounded bg-white/10 px-1.5 py-0.5">Esc</kbd> to cancel.
+                            </p>
+                        ) : (
+                            <p className="text-xs text-slate-500">Tip: Keep the scanner open to capture the next guest instantly.</p>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
             <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
                 <DialogContent className="border border-white/10 bg-slate-950 text-slate-100 sm:max-w-md">
                     <DialogHeader>

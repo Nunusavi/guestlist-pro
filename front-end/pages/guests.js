@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 import RouteGuard from "@/components/RouteGuard";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +18,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -34,6 +43,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 // Normalization function inspired by your admin/users.js
 const normalizeGuest = (guest) => {
@@ -148,6 +158,35 @@ function GuestListPage() {
         { value: "checked_in", label: "Checked In" },
         { value: "not_checked_in", label: "Not Checked In" },
     ]), []);
+
+    const paginationRange = useMemo(() => {
+        const total = Math.max(1, pagination.totalPages || 1);
+        const current = Math.min(Math.max(1, pagination.page || 1), total);
+
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, index) => index + 1);
+        }
+
+        const range = [1];
+        const left = Math.max(2, current - 1);
+        const right = Math.min(total - 1, current + 1);
+
+        if (left > 2) {
+            range.push("ellipsis-left");
+        }
+
+        for (let page = left; page <= right; page += 1) {
+            range.push(page);
+        }
+
+        if (right < total - 1) {
+            range.push("ellipsis-right");
+        }
+
+        range.push(total);
+
+        return range;
+    }, [pagination.page, pagination.totalPages]);
 
     const statusBadgeClass = (status) => (
         status === "checked_in"
@@ -325,30 +364,69 @@ function GuestListPage() {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-row gap-2 rounded-3xl border border-white/10 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-sm text-slate-300/80">
                     Page {pagination.page} of {pagination.totalPages || 1}
                 </span>
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(pagination.page - 1)}
-                        disabled={pagination.page <= 1}
-                        className="rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
-                    >
-                        <ChevronLeft className="mr-1 h-4 w-4" /> Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(pagination.page + 1)}
-                        disabled={pagination.page >= pagination.totalPages}
-                        className="rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10 disabled:opacity-40"
-                    >
-                        Next <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                </div>
+                <Pagination className="justify-end sm:justify-end">
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href="#"
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    handlePageChange(pagination.page - 1);
+                                }}
+                                aria-disabled={pagination.page <= 1}
+                                tabIndex={pagination.page <= 1 ? -1 : 0}
+                                className={cn(
+                                    "rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10",
+                                    pagination.page <= 1 && "pointer-events-none opacity-40"
+                                )}
+                            />
+                        </PaginationItem>
+
+                        {paginationRange.map((value) => (
+                            value === "ellipsis-left" || value === "ellipsis-right"
+                                ? (
+                                    <PaginationItem key={value}>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                )
+                                : (
+                                    <PaginationItem key={value}>
+                                        <PaginationLink
+                                            href="#"
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                handlePageChange(value);
+                                            }}
+                                            isActive={value === pagination.page}
+                                            className="rounded-full"
+                                        >
+                                            {value}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                )
+                        ))}
+
+                        <PaginationItem>
+                            <PaginationNext
+                                href="#"
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    handlePageChange(pagination.page + 1);
+                                }}
+                                aria-disabled={pagination.page >= pagination.totalPages}
+                                tabIndex={pagination.page >= pagination.totalPages ? -1 : 0}
+                                className={cn(
+                                    "rounded-full border-white/20 bg-white/5 text-slate-100 hover:bg-white/10",
+                                    pagination.page >= pagination.totalPages && "pointer-events-none opacity-40"
+                                )}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
 
             <Dialog open={isDetailsOpen} onOpenChange={(open) => (open ? setIsDetailsOpen(true) : closeGuestDetails())}>
