@@ -430,7 +430,7 @@ function GuestListPage() {
             </div>
 
             <Dialog open={isDetailsOpen} onOpenChange={(open) => (open ? setIsDetailsOpen(true) : closeGuestDetails())}>
-                <DialogContent className="max-w-xl border border-white/10 bg-slate-950/90 text-slate-100">
+                <DialogContent className="max-w-screen max-h-4/5 border overflow-auto border-white/10 bg-slate-950/90 text-slate-100">
                     {selectedGuest ? (
                         <>
                             <DialogHeader>

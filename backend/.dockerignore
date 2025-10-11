@@ -1,0 +1,31 @@
+# Dependency directories
+node_modules
+npm-debug.log
+
+# Logs
+logs
+*.log
+
+# Env files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Build artifacts
+*.tgz
+coverage
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Misc
+.vscode
+.idea

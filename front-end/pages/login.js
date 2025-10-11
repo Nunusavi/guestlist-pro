@@ -88,9 +88,12 @@ export default function LoginPage() {
 
                 <div className="relative flex flex-1 flex-col justify-center gap-12 px-16 pb-24 pt-28">
                     <div className="space-y-6">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
-                            GuestList Pro
-                        </span>
+                        <div className='relative'>
+                            <span className="animate-pulse w-1/3 absolute -inset-1 rounded-full bg-gradient-to-r from-emerald-400/30 via-sky-400/20 to-white/10 blur-md"></span>
+                            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-lg font-semibold uppercase tracking-[0.35em] text-white/70">
+                                GuestList Pro
+                            </span>
+                        </div>
                         <div className="space-y-4">
                             <h1 className="text-4xl font-semibold leading-tight text-white lg:text-5xl">
                                 Elevate arrivals with precision and grace.
@@ -118,18 +121,25 @@ export default function LoginPage() {
                 </div>
             </section>
 
-            <section className="flex items-center justify-center py-16 lg:px-16">
+            <section className="flex flex-col items-center gap-7 justify-center py-10 lg:px-6">
+                <span className="relative block lg:hidden">
+                    <span className="animate-pulse absolute -inset-1 rounded-full bg-gradient-to-r from-emerald-400/30 via-sky-400/20 to-white/10 blur-md"></span>
+                    <span className={`${heroFont.className} z-10 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-gradient-to-r from-emerald-400/20 via-sky-400/10 to-white/5 px-6 py-2 text-2xl font-extrabold uppercase tracking-[0.35em] text-white shadow-lg shadow-emerald-400/10`}>
+                        <Check className="h-8 w-8 p-1 border rounded-4xl text-emerald-400" />
+                        Guest List
+                    </span>
+                </span>
                 <div className="absolute top-0 left-0 h-50 w-50 rounded-full bg-emerald-400/20 blur-3xl" />
-                <Card className="relative w-full max-w-9/12 sm:max-w-screen overflow-hidden border-0 text-white ">
-                    <CardHeader className="relative z-10  text-center">
-                        <CardTitle className="text-3xl font-extrabold ">Welcome</CardTitle>
+                <Card className="relative w-full max-w-11/12 sm:max-w-screen overflow-hidden border-0 bg-slate-900/20 text-white ">
+                    <CardHeader className="relative z-10 text-center">
+                        <CardTitle className="text-3xl animate-pulse shadow-2xl  font-extrabold ">Welcome</CardTitle>
                         <CardDescription className="text-base text-slate-600">
                             <span className="font-bold text-emerald-400">Sign in!</span>
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="relative z-10">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 group">
                                 <FormField
                                     control={form.control}
                                     name="username"
@@ -137,12 +147,12 @@ export default function LoginPage() {
                                         <FormItem>
                                             <FormLabel className="text-sm font-medium text-slate-100">Username</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    autoComplete="username"
-                                                    placeholder="Enter your username"
-                                                    {...field}
-                                                    className="h-11 rounded-xl border-slate-200"
-                                                />
+                                                    <Input
+                                                        autoComplete="username"
+                                                        placeholder="Enter your username"
+                                                        {...field}
+                                                        className="h-11 rounded-xl border-slate-200 focus:"
+                                                    />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -155,13 +165,13 @@ export default function LoginPage() {
                                         <FormItem>
                                             <FormLabel className="text-sm font-medium text-slate-100">Password</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    type="password"
-                                                    autoComplete="current-password"
-                                                    placeholder="********"
-                                                    {...field}
-                                                    className="h-11 rounded-xl border-slate-200"
-                                                />
+                                                    <Input
+                                                        type="password"
+                                                        autoComplete="current-password"
+                                                        placeholder="********"
+                                                        {...field}
+                                                        className="h-11 rounded-xl border-slate-200 focus:outline-none focus:border-transparent transition-all"
+                                                    />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
